@@ -32,7 +32,6 @@
 namespace FDB {
 
 	class DatabaseContext : public ReferenceCounted<DatabaseContext>, NonCopyable {
-		friend class Cluster;
 		friend class Transaction;
 	public:
 		~DatabaseContext() {
@@ -48,20 +47,6 @@ namespace FDB {
 		friend class API;
 	};
 
-	// Deprecated: Use createDatabase instead.
-	class Cluster : public ReferenceCounted<Cluster>, NonCopyable {
-	public:
-		~Cluster() {}
-
-		Reference<DatabaseContext> createDatabase();
-
-	private:
-		explicit Cluster( std::string connFilename ) : connFilename(connFilename) {}
-
-		std::string connFilename;
-		friend class API;
-	};
-
 	class API {
 	public:
 		static API* selectAPIVersion(int apiVersion);
@@ -73,9 +58,6 @@ namespace FDB {
 		void setupNetwork();
 		void runNetwork();
 		void stopNetwork();
-
-		// Deprecated: Use createDatabase instead.
-		Reference<Cluster> createCluster( std::string const& connFilename );
 
 		Reference<DatabaseContext> createDatabase( std::string const& connFilename="" );
 

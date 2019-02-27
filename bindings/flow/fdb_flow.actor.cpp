@@ -187,10 +187,6 @@ namespace FDB {
 		return fdb_error_predicate( pred, e.code() );
 	}
 
-	Reference<Cluster> API::createCluster( std::string const& connFilename ) {
-		return Reference<Cluster>(new Cluster(connFilename));
-	}
-
 	Reference<DatabaseContext> API::createDatabase(std::string const& connFilename) {
 		FDBDatabase *db;
 		throw_on_error(fdb_create_database(connFilename.c_str(), &db));
@@ -199,10 +195,6 @@ namespace FDB {
 
 	int API::getAPIVersion() const {
 		return version;
-	}
-
-	Reference<DatabaseContext> Cluster::createDatabase() {
-		return API::getInstance()->createDatabase(connFilename.c_str());
 	}
 
 	void DatabaseContext::setDatabaseOption(FDBDatabaseOption option, Optional<StringRef> value) {
