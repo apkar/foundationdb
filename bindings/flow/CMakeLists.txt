@@ -14,7 +14,8 @@ set(SRCS
   Tuple.cpp
   Tuple.h
   fdb_flow.actor.cpp
-  fdb_flow.h)
+  fdb_flow.h
+  fdb_flow_api.h)
 
 add_flow_target(NAME fdb_flow SRCS ${SRCS} STATIC_LIBRARY)
 target_link_libraries(fdb_flow PUBLIC fdb_c)

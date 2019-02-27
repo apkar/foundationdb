@@ -22,6 +22,7 @@
     <ClInclude Include="DirectoryPartition.h" />
     <ClInclude Include="FDBLoanerTypes.h" />
     <ClInclude Include="fdb_flow.h" />
+    <ClInclude Include="fdb_flow_api.h" />
     <ClInclude Include="Tuple.h" />
   </ItemGroup>
   <ItemGroup>
