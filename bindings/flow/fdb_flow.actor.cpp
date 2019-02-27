@@ -35,7 +35,7 @@ THREAD_FUNC networkThread(void* fdb) {
 ACTOR Future<Void> _test() {
 	API *fdb = FDB::API::selectAPIVersion(610);
 	auto db = fdb->createDatabase();
-	state Reference<Transaction> tr( new Transaction(db) );
+	state Reference<ITransaction> tr = db->createTransaction();
 
 	// tr->setVersion(1);
 
@@ -187,14 +187,19 @@ namespace FDB {
 		return fdb_error_predicate( pred, e.code() );
 	}
 
-	Reference<DatabaseContext> API::createDatabase(std::string const& connFilename) {
+	Reference<IDatabase> API::createDatabase(std::string const& connFilename) {
 		FDBDatabase *db;
 		throw_on_error(fdb_create_database(connFilename.c_str(), &db));
-		return Reference<DatabaseContext>(new DatabaseContext(db));
+		return Reference<IDatabase>(new DatabaseContext(db));
 	}
 
 	int API::getAPIVersion() const {
 		return version;
+	}
+
+
+	Reference<ITransaction> DatabaseContext::createTransaction() {
+		return Reference<ITransaction>(new Transaction(db));
 	}
 
 	void DatabaseContext::setDatabaseOption(FDBDatabaseOption option, Optional<StringRef> value) {
@@ -206,6 +211,11 @@ namespace FDB {
 
 	Transaction::Transaction( Reference<DatabaseContext> const& db ) {
 		throw_on_error( fdb_database_create_transaction( db->db, &tr ) );
+	}
+
+	// Review comments?
+	Transaction::Transaction( FDBDatabase *db ) {
+		throw_on_error( fdb_database_create_transaction( db, &tr ) );
 	}
 
 	void Transaction::setVersion( Version v ) {

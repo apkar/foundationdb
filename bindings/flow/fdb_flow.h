@@ -25,14 +25,18 @@
 
 namespace FDB {
 
-	class DatabaseContext : public ReferenceCounted<DatabaseContext>, NonCopyable {
+	class DatabaseContext : public IDatabase, ReferenceCounted<DatabaseContext>, NonCopyable {
 		friend class Transaction;
 	public:
-		~DatabaseContext() {
+		virtual ~DatabaseContext() {
 			fdb_database_destroy( db );
 		}
 
-		void setDatabaseOption(FDBDatabaseOption option, Optional<StringRef> value = Optional<StringRef>());
+		Reference<ITransaction> createTransaction() override;
+		void setDatabaseOption(FDBDatabaseOption option, Optional<StringRef> value = Optional<StringRef>()) override;
+
+		void addref() override { ReferenceCounted<DatabaseContext>::addref(); }
+		void delref() override { ReferenceCounted<DatabaseContext>::delref(); }
 
 	private:
 		FDBDatabase* db;
@@ -53,7 +57,7 @@ namespace FDB {
 		void runNetwork();
 		void stopNetwork();
 
-		Reference<DatabaseContext> createDatabase( std::string const& connFilename="" );
+		Reference<IDatabase> createDatabase( std::string const& connFilename="" );
 
 		bool evaluatePredicate(FDBErrorPredicate pred, Error const& e);
 		int getAPIVersion() const;
@@ -68,6 +72,8 @@ namespace FDB {
 	class Transaction : public ITransaction, ReferenceCounted<Transaction>, private NonCopyable, public FastAllocated<Transaction> {
 	public:
 		explicit Transaction( Reference<DatabaseContext> const& db );
+		// Review: are we better off with Reference?
+		explicit Transaction(FDBDatabase *db);
 		virtual ~Transaction() {
 			if (tr) {
 				fdb_transaction_destroy(tr);
@@ -78,18 +84,17 @@ namespace FDB {
 		Future<Version> getReadVersion() override;
 
 		Future< Optional<FDBStandalone<ValueRef>> > get( const Key& key, bool snapshot = false ) override;
-		Future< Void > watch( const Key& key ) override;
 		Future< FDBStandalone<KeyRef> > getKey( const KeySelector& key, bool snapshot = false ) override;
+
+		Future< Void > watch( const Key& key ) override;
+
 		using ITransaction::getRange;
 		Future< FDBStandalone<RangeResultRef> > getRange( const KeySelector& begin, const KeySelector& end, GetRangeLimits limits = GetRangeLimits(), bool snapshot = false, bool reverse = false, FDBStreamingMode streamingMode = FDB_STREAMING_MODE_SERIAL) override;
-
-		// Future< Standalone<VectorRef<const char*>> > getAddressesForKey(const Key& key);
 
 		void addReadConflictRange( KeyRangeRef const& keys ) override;
 		void addReadConflictKey( KeyRef const& key ) override;
 		void addWriteConflictRange( KeyRangeRef const& keys ) override;
 		void addWriteConflictKey( KeyRef const& key ) override;
-		// void makeSelfConflicting() { tr.makeSelfConflicting(); }
 
 		void atomicOp( const KeyRef& key, const ValueRef& operand, FDBMutationType operationType ) override;
 		void set( const KeyRef& key, const ValueRef& value ) override;
@@ -106,8 +111,6 @@ namespace FDB {
 
 		void cancel() override;
 		void reset() override;
-		// double getBackoff() { return tr.getBackoff(); }
-		// void debugTransaction(UID dID) { tr.debugTransaction(dID); }
 
 		Transaction() : tr(NULL) {}
 		Transaction( Transaction&& r ) noexcept(true) {
