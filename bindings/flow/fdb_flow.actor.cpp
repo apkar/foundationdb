@@ -209,10 +209,6 @@ namespace FDB {
 			throw_on_error(fdb_database_set_option(db, option, NULL, 0));
 	}
 
-	Transaction::Transaction( Reference<DatabaseContext> const& db ) {
-		throw_on_error( fdb_database_create_transaction( db->db, &tr ) );
-	}
-
 	// Review comments?
 	Transaction::Transaction( FDBDatabase *db ) {
 		throw_on_error( fdb_database_create_transaction( db, &tr ) );

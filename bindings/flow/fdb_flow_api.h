@@ -116,5 +116,29 @@ namespace FDB {
 		virtual Reference<ITransaction> createTransaction() = 0;
 		virtual void setDatabaseOption(FDBDatabaseOption option, Optional<StringRef> value = Optional<StringRef>()) = 0;
 	};
+
+	class API {
+	 public:
+		static API* selectAPIVersion(int apiVersion);
+		static API* getInstance();
+		static bool isAPIVersionSelected();
+
+		void setNetworkOption(FDBNetworkOption option, Optional<StringRef> value = Optional<StringRef>());
+
+		void setupNetwork();
+		void runNetwork();
+		void stopNetwork();
+
+		Reference<IDatabase> createDatabase(std::string const& connFilename="");
+
+		bool evaluatePredicate(FDBErrorPredicate pred, Error const& e);
+		int getAPIVersion() const;
+
+	 private:
+		static API* instance;
+
+		API(int version);
+		int version;
+	};
 }
 #endif //FDB_FLOW_FDB_FLOW_API_H

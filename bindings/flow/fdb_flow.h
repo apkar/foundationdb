@@ -26,7 +26,6 @@
 namespace FDB {
 
 	class DatabaseContext : public IDatabase, ReferenceCounted<DatabaseContext>, NonCopyable {
-		friend class Transaction;
 	public:
 		virtual ~DatabaseContext() {
 			fdb_database_destroy( db );
@@ -45,35 +44,9 @@ namespace FDB {
 		friend class API;
 	};
 
-	class API {
-	public:
-		static API* selectAPIVersion(int apiVersion);
-		static API* getInstance();
-		static bool isAPIVersionSelected();
-
-		void setNetworkOption(FDBNetworkOption option, Optional<StringRef> value = Optional<StringRef>());
-
-		void setupNetwork();
-		void runNetwork();
-		void stopNetwork();
-
-		Reference<IDatabase> createDatabase( std::string const& connFilename="" );
-
-		bool evaluatePredicate(FDBErrorPredicate pred, Error const& e);
-		int getAPIVersion() const;
-
-	private:
-		static API* instance;
-
-		API(int version);
-		int version;
-	};
-
 	class Transaction : public ITransaction, ReferenceCounted<Transaction>, private NonCopyable, public FastAllocated<Transaction> {
+		friend class DatabaseContext;
 	public:
-		explicit Transaction( Reference<DatabaseContext> const& db );
-		// Review: are we better off with Reference?
-		explicit Transaction(FDBDatabase *db);
 		virtual ~Transaction() {
 			if (tr) {
 				fdb_transaction_destroy(tr);
@@ -128,6 +101,10 @@ namespace FDB {
 
 	private:
 		FDBTransaction* tr;
+
+		// Review: Do we need to hold reference on the database object? If so we may want to pass Reference to
+		// DatabaseContext which holds FDBDatabase.
+		explicit Transaction(FDBDatabase *db);
 	};
 
 }
