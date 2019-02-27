@@ -115,6 +115,12 @@ namespace FDB {
 	 public:
 		virtual Reference<ITransaction> createTransaction() = 0;
 		virtual void setDatabaseOption(FDBDatabaseOption option, Optional<StringRef> value = Optional<StringRef>()) = 0;
+
+		// Review: what is the best way to deal with lambdas, std::function or decltype?
+		template <class T> static Future<T> run(Reference<IDatabase> const& db, std::function<Future<T>(Reference<ITransaction>)> const& task);
+		template <class T> static Future<T> read(Reference<IDatabase> const& db, std::function<Future<T>(Reference<ReadTransaction>)> const& task);
+
+		// template <class Function> Future<decltype(fake<Function>()(Reference<ITransaction>()).getValue())> run(Function func);
 	};
 
 	class API {
