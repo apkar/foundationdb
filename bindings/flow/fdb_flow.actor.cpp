@@ -209,31 +209,30 @@ namespace FDB {
 			throw_on_error(fdb_database_set_option(db, option, NULL, 0));
 	}
 
-	ACTOR template<class T> Future<T> IDatabase::run(Reference<IDatabase> db, std::function<Future<T>(Reference<Transaction>)> task) {
-		state Reference<Transaction> tr = db->createTransaction();
-		loop {
-			try {
-				state T result = wait(task(tr));
-				wait(tr->commit());
-				return result;
-			} catch (Error &e) {
-				// Comment: Do we need to check for actor cancelled error?
-				wait(tr->onError(e));
-			}
-		}
-	}
-
-	ACTOR template<class T> Future<T> IDatabase::read(Reference<IDatabase> db, std::function<Future<T>(Reference<ReadTransaction>)> task) {
-		state Reference<ReadTransaction> tr = db->createTransaction();
-		loop {
-			try {
-				T result = wait(task(tr));
-				return result;
-			} catch (Error &e) {
-				wait(tr->onError(e));
-			}
-		}
-	}
+//	ACTOR template<class T> Future<T> IDatabase::run(Reference<IDatabase> db, std::function<Future<T>(Reference<Transaction>)> task) {
+//		state Reference<Transaction> tr = db->createTransaction();
+//		loop {
+//			try {
+//				state T result = wait(task(tr));
+//				wait(tr->commit());
+//				return result;
+//			} catch (Error &e) {
+//				wait(tr->onError(e));
+//			}
+//		}
+//	}
+//
+//	ACTOR template<class T> Future<T> IDatabase::read(Reference<IDatabase> db, std::function<Future<T>(Reference<ReadTransaction>)> task) {
+//		state Reference<ReadTransaction> tr = db->createTransaction();
+//		loop {
+//			try {
+//				T result = wait(task(tr));
+//				return result;
+//			} catch (Error &e) {
+//				wait(tr->onError(e));
+//			}
+//		}
+//	}
 
 	// Review comments?
 	TransactionImpl::TransactionImpl( FDBDatabase *db ) {

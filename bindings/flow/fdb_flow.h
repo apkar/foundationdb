@@ -25,7 +25,7 @@
 
 namespace FDB {
 
-	class DatabaseContext : public IDatabase, ReferenceCounted<DatabaseContext>, NonCopyable {
+	class DatabaseContext : public IDatabase, NonCopyable {
 	public:
 		virtual ~DatabaseContext() {
 			fdb_database_destroy( db );
@@ -34,8 +34,8 @@ namespace FDB {
 		Reference<Transaction> createTransaction() override;
 		void setDatabaseOption(FDBDatabaseOption option, Optional<StringRef> value = Optional<StringRef>()) override;
 
-		void addref() override { ReferenceCounted<DatabaseContext>::addref(); }
-		void delref() override { ReferenceCounted<DatabaseContext>::delref(); }
+//		void addref() override { ReferenceCounted<DatabaseContext>::addref(); }
+//		void delref() override { ReferenceCounted<DatabaseContext>::delref(); }
 
 	private:
 		FDBDatabase* db;
@@ -44,7 +44,7 @@ namespace FDB {
 		friend class API;
 	};
 
-	class TransactionImpl : public Transaction, ReferenceCounted<TransactionImpl>, private NonCopyable, public FastAllocated<TransactionImpl> {
+	class TransactionImpl : public Transaction, private NonCopyable, public FastAllocated<TransactionImpl> {
 		friend class DatabaseContext;
 	public:
 		virtual ~TransactionImpl() {
@@ -96,8 +96,8 @@ namespace FDB {
 			return *this;
 		}
 
-		void addref() override { ReferenceCounted<TransactionImpl>::addref(); }
-		void delref() override { ReferenceCounted<TransactionImpl>::delref(); }
+//		void addref() override { ReferenceCounted<TransactionImpl>::addref(); }
+//		void delref() override { ReferenceCounted<TransactionImpl>::delref(); }
 
 	private:
 		FDBTransaction* tr;

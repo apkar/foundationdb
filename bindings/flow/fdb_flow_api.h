@@ -63,9 +63,10 @@ namespace FDB {
 		Reference<CFuture> f;
 	};
 
-	class ReadTransaction : public IReferenceCounted {
+	class ReadTransaction : public ReferenceCounted<ReadTransaction> {
 		// Comment: we could add read and run with templated types here to handle with both db and tr
 	 public:
+		virtual ~ReadTransaction() {};
 		virtual void setReadVersion(Version v) = 0;
 		virtual Future<Version> getReadVersion() = 0;
 
@@ -114,13 +115,14 @@ namespace FDB {
 		virtual Future<FDBStandalone<StringRef>> getVersionstamp() = 0;
 	};
 
-	class IDatabase : public IReferenceCounted {
+	class IDatabase : public ReferenceCounted<IDatabase> {
 	 public:
+		virtual ~IDatabase() {};
 		virtual Reference<Transaction> createTransaction() = 0;
 		virtual void setDatabaseOption(FDBDatabaseOption option, Optional<StringRef> value = Optional<StringRef>()) = 0;
 
-		template <class T> Future<T> run(std::function<Future<T>(Reference<Transaction>)> task);
-		template <class T> Future<T> read(std::function<Future<T>(Reference<ReadTransaction>)> task);
+//		template <class T> Future<T> run(std::function<Future<T>(Reference<Transaction>)> task);
+//		template <class T> Future<T> read(std::function<Future<T>(Reference<ReadTransaction>)> task);
 	};
 
 	class API {
