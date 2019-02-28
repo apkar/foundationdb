@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "bindings/flow/fdb_flow.h"
+#include "bindings/flow/fdb_flow_api.h"
 
 namespace FDB {
 	struct Uuid {

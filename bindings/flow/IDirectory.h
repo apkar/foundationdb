@@ -24,7 +24,7 @@
 #pragma once
 
 #include "flow/flow.h"
-#include "bindings/flow/fdb_flow.h"
+#include "bindings/flow/fdb_flow_api.h"
 
 namespace FDB {
 	class DirectoryLayer;

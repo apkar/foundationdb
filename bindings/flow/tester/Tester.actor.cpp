@@ -41,7 +41,7 @@ std::map<Standalone<StringRef>, Reference<Transaction>> trMap;
 const int ITERATION_PROGRESSION[] = { 256, 1000, 4096, 6144, 9216, 13824, 20736, 31104, 46656, 69984, 80000 };
 const int MAX_ITERATION = sizeof(ITERATION_PROGRESSION)/sizeof(int);
 
-static Future<Void> runTest(Reference<FlowTesterData> const& data, Reference<DatabaseContext> const& db, StringRef const& prefix);
+static Future<Void> runTest(Reference<FlowTesterData> const& data, Reference<IDatabase> const& db, StringRef const& prefix);
 
 THREAD_FUNC networkThread( void* api ) {
 	// This is the fdb_flow network we're running on a thread
@@ -388,7 +388,7 @@ struct LogStackFunc : InstructionFunc {
 
 	ACTOR static Future<Void> logStack(Reference<FlowTesterData> data, std::map<int, StackItem> entries, Standalone<StringRef> prefix) {
 		loop {
-			state Reference<Transaction> tr(new Transaction(data->db));
+			state Reference<Transaction> tr = data->db->createTransaction();
 			try {
 				for(auto it : entries) {
 					Tuple tk;
@@ -534,7 +534,7 @@ struct NewTransactionFunc : InstructionFunc {
 	static const char* name;
 
 	static Future<Void> call(Reference<FlowTesterData> const& data, Reference<InstructionData> const& instruction) {
-		trMap[data->trName] = Reference<Transaction>(new Transaction(data->db));
+		trMap[data->trName] = data->db->createTransaction();
 		return Void();
 	}
 };
@@ -550,7 +550,7 @@ struct UseTransactionFunc : InstructionFunc {
 		data->trName = name;
 
 		if(trMap.count(data->trName) == 0) {
-			trMap[data->trName] = Reference<Transaction>(new Transaction(data->db));
+			trMap[data->trName] = data->db->createTransaction();
 		}
 		return Void();
 	}
@@ -681,7 +681,7 @@ struct SetReadVersionFunc : InstructionFunc {
 	static const char* name;
 
 	static Future<Void> call(Reference<FlowTesterData> const& data, Reference<InstructionData> const& instruction) {
-		instruction->tr->setVersion(data->lastVersion);
+		instruction->tr->setReadVersion(data->lastVersion);
 		return Void();
 	}
 };
@@ -1336,7 +1336,7 @@ struct WaitEmptyFunc : InstructionFunc {
 		state Standalone<StringRef> prefix = Tuple::unpack(s1).getString(0);
 		// printf("=========WAIT_EMPTY:%s\n", printable(prefix).c_str());
 
-		state Reference<Transaction> tr(new Transaction(data->db));
+		state Reference<Transaction> tr = data->db->createTransaction();
 		loop {
 			try {
 				FDBStandalone<RangeResultRef> results = wait(tr->getRange(KeyRangeRef(prefix, strinc(prefix)), 1));
@@ -1529,7 +1529,7 @@ struct UnitTestsFunc : InstructionFunc {
 		}
 		API::selectAPIVersion(fdb->getAPIVersion());
 
-		state Reference<Transaction> tr(new Transaction(data->db));
+		state Reference<Transaction> tr = data->db->createTransaction();
 		tr->setOption(FDBTransactionOption::FDB_TR_OPTION_PRIORITY_SYSTEM_IMMEDIATE);
 		tr->setOption(FDBTransactionOption::FDB_TR_OPTION_PRIORITY_SYSTEM_IMMEDIATE);
 		tr->setOption(FDBTransactionOption::FDB_TR_OPTION_PRIORITY_BATCH);
@@ -1560,7 +1560,7 @@ const char* UnitTestsFunc::name = "UNIT_TESTS";
 REGISTER_INSTRUCTION_FUNC(UnitTestsFunc);
 
 ACTOR static Future<Void> getInstructions(Reference<FlowTesterData> data, StringRef prefix) {
-	state Reference<Transaction> tr(new Transaction(data->db));
+	state Reference<Transaction> tr = data->db->createTransaction();
 
 	// get test instructions
 	state Tuple testSpec;
@@ -1610,7 +1610,7 @@ ACTOR static Future<Void> doInstructions(Reference<FlowTesterData> data) {
 
 			state Reference<InstructionData> instruction = Reference<InstructionData>(new InstructionData(isDatabase, isSnapshot, data->instructions[idx].value, Reference<Transaction>()));
 			if (isDatabase) {
-				state Reference<Transaction> tr(new Transaction(data->db));
+				state Reference<Transaction> tr = data->db->createTransaction();
 				instruction->tr = tr;
 			}
 			else {
@@ -1644,7 +1644,7 @@ ACTOR static Future<Void> doInstructions(Reference<FlowTesterData> data) {
 	return Void();
 }
 
-ACTOR static Future<Void> runTest(Reference<FlowTesterData> data, Reference<DatabaseContext> db, StringRef prefix) {
+ACTOR static Future<Void> runTest(Reference<FlowTesterData> data, Reference<IDatabase> db, StringRef prefix) {
 	ASSERT(data);
 	try {
 		data->db = db;
@@ -1744,7 +1744,7 @@ ACTOR void _test_versionstamp() {
 		startThread(networkThread, fdb);
 
 		auto db = fdb->createDatabase();
-		state Reference<Transaction> tr(new Transaction(db));
+		state Reference<Transaction> tr = db->createTransaction();
 
 		state Future<FDBStandalone<StringRef>> ftrVersion = tr->getVersionstamp();
 

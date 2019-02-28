@@ -28,7 +28,7 @@
 #pragma once
 
 #include "flow/IDispatched.h"
-#include "bindings/flow/fdb_flow.h"
+#include "bindings/flow/fdb_flow_api.h"
 #include "bindings/flow/IDirectory.h"
 #include "bindings/flow/Subspace.h"
 #include "bindings/flow/DirectoryLayer.h"
@@ -199,7 +199,7 @@ struct DirectoryTesterData {
 
 struct FlowTesterData : public ReferenceCounted<FlowTesterData> {
 	FDB::API *api;
-	Reference<FDB::DatabaseContext> db;
+	Reference<FDB::IDatabase> db;
 	Standalone<FDB::RangeResultRef> instructions;
 	Standalone<StringRef> trName;
 	FlowTesterStack stack;
