@@ -31,6 +31,7 @@
 #include "FDBLoanerTypes.h"
 
 namespace FDB {
+	// Note: Why can't we use just virtual destructor.
 	class IReferenceCounted {
 	 public:
 		virtual ~IReferenceCounted();
@@ -63,8 +64,9 @@ namespace FDB {
 	};
 
 	class ReadTransaction : public IReferenceCounted {
+		// Comment: we could add read and run with templated types here to handle with both db and tr
 	 public:
-		virtual void setVersion(Version v) = 0;
+		virtual void setReadVersion(Version v) = 0;
 		virtual Future<Version> getReadVersion() = 0;
 
 		virtual Future<Optional<FDBStandalone<ValueRef>>> get(const Key& key, bool snapshot = false) = 0;
@@ -86,6 +88,9 @@ namespace FDB {
 			                 limits, snapshot, reverse, streamingMode );
 		}
 
+		virtual void addReadConflictRange(KeyRangeRef const& keys) = 0;
+		virtual void addReadConflictKey(KeyRef const& key) = 0;
+
 		virtual void setOption(FDBTransactionOption option, Optional<StringRef> value = Optional<StringRef>()) = 0;
 
 		virtual Future<Void> onError(Error const& e) = 0;
@@ -96,8 +101,6 @@ namespace FDB {
 
 	class ITransaction : public ReadTransaction {
 	 public:
-		virtual void addReadConflictRange(KeyRangeRef const& keys) = 0;
-		virtual void addReadConflictKey(KeyRef const& key) = 0;
 		virtual void addWriteConflictRange(KeyRangeRef const& keys) = 0;
 		virtual void addWriteConflictKey(KeyRef const& key) = 0;
 
@@ -116,11 +119,8 @@ namespace FDB {
 		virtual Reference<ITransaction> createTransaction() = 0;
 		virtual void setDatabaseOption(FDBDatabaseOption option, Optional<StringRef> value = Optional<StringRef>()) = 0;
 
-		// Review: what is the best way to deal with lambdas, std::function or decltype?
-		template <class T> static Future<T> run(Reference<IDatabase> const& db, std::function<Future<T>(Reference<ITransaction>)> const& task);
-		template <class T> static Future<T> read(Reference<IDatabase> const& db, std::function<Future<T>(Reference<ReadTransaction>)> const& task);
-
-		// template <class Function> Future<decltype(fake<Function>()(Reference<ITransaction>()).getValue())> run(Function func);
+		template <class T> Future<T> run(std::function<Future<T>(Reference<ITransaction>)> task);
+		template <class T> Future<T> read(std::function<Future<T>(Reference<ReadTransaction>)> task);
 	};
 
 	class API {

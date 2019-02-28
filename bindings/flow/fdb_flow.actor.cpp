@@ -217,13 +217,14 @@ namespace FDB {
 				wait(tr->commit());
 				return result;
 			} catch (Error &e) {
+				// Comment: Do we need to check for actor cancelled error?
 				wait(tr->onError(e));
 			}
 		}
 	}
 
 	ACTOR template<class T> Future<T> IDatabase::read(Reference<IDatabase> db, std::function<Future<T>(Reference<ReadTransaction>)> task) {
-		state Reference<ITransaction> tr = db->createTransaction();
+		state Reference<ReadTransaction> tr = db->createTransaction();
 		loop {
 			try {
 				T result = wait(task(tr));
