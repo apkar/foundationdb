@@ -31,7 +31,7 @@ namespace FDB {
 			fdb_database_destroy( db );
 		}
 
-		Reference<ITransaction> createTransaction() override;
+		Reference<Transaction> createTransaction() override;
 		void setDatabaseOption(FDBDatabaseOption option, Optional<StringRef> value = Optional<StringRef>()) override;
 
 		void addref() override { ReferenceCounted<DatabaseContext>::addref(); }
@@ -44,16 +44,16 @@ namespace FDB {
 		friend class API;
 	};
 
-	class Transaction : public ITransaction, ReferenceCounted<Transaction>, private NonCopyable, public FastAllocated<Transaction> {
+	class TransactionImpl : public Transaction, ReferenceCounted<TransactionImpl>, private NonCopyable, public FastAllocated<TransactionImpl> {
 		friend class DatabaseContext;
 	public:
-		virtual ~Transaction() {
+		virtual ~TransactionImpl() {
 			if (tr) {
 				fdb_transaction_destroy(tr);
 			}
 		}
 
-		void setVersion( Version v ) override;
+		void setReadVersion( Version v ) override;
 		Future<Version> getReadVersion() override;
 
 		Future< Optional<FDBStandalone<ValueRef>> > get( const Key& key, bool snapshot = false ) override;
@@ -61,7 +61,7 @@ namespace FDB {
 
 		Future< Void > watch( const Key& key ) override;
 
-		using ITransaction::getRange;
+		using Transaction::getRange;
 		Future< FDBStandalone<RangeResultRef> > getRange( const KeySelector& begin, const KeySelector& end, GetRangeLimits limits = GetRangeLimits(), bool snapshot = false, bool reverse = false, FDBStreamingMode streamingMode = FDB_STREAMING_MODE_SERIAL) override;
 
 		void addReadConflictRange( KeyRangeRef const& keys ) override;
@@ -85,26 +85,26 @@ namespace FDB {
 		void cancel() override;
 		void reset() override;
 
-		Transaction() : tr(NULL) {}
-		Transaction( Transaction&& r ) noexcept(true) {
+		TransactionImpl() : tr(NULL) {}
+		TransactionImpl( TransactionImpl&& r ) noexcept(true) {
 			tr = r.tr;
 			r.tr = NULL;
 		}
-		Transaction& operator=( Transaction&& r ) noexcept(true) {
+		TransactionImpl& operator=( TransactionImpl&& r ) noexcept(true) {
 			tr = r.tr;
 			r.tr = NULL;
 			return *this;
 		}
 
-		void addref() override { ReferenceCounted<Transaction>::addref(); }
-		void delref() override { ReferenceCounted<Transaction>::delref(); }
+		void addref() override { ReferenceCounted<TransactionImpl>::addref(); }
+		void delref() override { ReferenceCounted<TransactionImpl>::delref(); }
 
 	private:
 		FDBTransaction* tr;
 
 		// Review: Do we need to hold reference on the database object? If so we may want to pass Reference to
 		// DatabaseContext which holds FDBDatabase.
-		explicit Transaction(FDBDatabase *db);
+		explicit TransactionImpl(FDBDatabase *db);
 	};
 
 }

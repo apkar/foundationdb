@@ -99,7 +99,7 @@ namespace FDB {
 		virtual void reset() = 0;
 	};
 
-	class ITransaction : public ReadTransaction {
+	class Transaction : public ReadTransaction {
 	 public:
 		virtual void addWriteConflictRange(KeyRangeRef const& keys) = 0;
 		virtual void addWriteConflictKey(KeyRef const& key) = 0;
@@ -116,10 +116,10 @@ namespace FDB {
 
 	class IDatabase : public IReferenceCounted {
 	 public:
-		virtual Reference<ITransaction> createTransaction() = 0;
+		virtual Reference<Transaction> createTransaction() = 0;
 		virtual void setDatabaseOption(FDBDatabaseOption option, Optional<StringRef> value = Optional<StringRef>()) = 0;
 
-		template <class T> Future<T> run(std::function<Future<T>(Reference<ITransaction>)> task);
+		template <class T> Future<T> run(std::function<Future<T>(Reference<Transaction>)> task);
 		template <class T> Future<T> read(std::function<Future<T>(Reference<ReadTransaction>)> task);
 	};
 
