@@ -1093,29 +1093,6 @@ bool GetRangeLimits::hasSatisfiedMinRows() {
 	return hasByteLimit() && minRows == 0;
 }
 
-AddressExclusion AddressExclusion::parse( StringRef const& key ) {
-	//Must not change: serialized to the database!
-	auto parsedIp = IPAddress::parse(key.toString());
-	if (parsedIp.present()) {
-		return AddressExclusion(parsedIp.get());
-	}
-
-	// Not a whole machine, includes `port'.
-	try {
-		auto addr = NetworkAddress::parse(key.toString());
-		if (addr.isTLS()) {
-			TraceEvent(SevWarnAlways, "AddressExclusionParseError")
-				.detail("String", key)
-				.detail("Description", "Address inclusion string should not include `:tls' suffix.");
-			return AddressExclusion();
-		}
-		return AddressExclusion(addr.ip, addr.port);
-	} catch (Error& ) {
-		TraceEvent(SevWarnAlways, "AddressExclusionParseError").detail("String", key);
-		return AddressExclusion();
-	}
-}
-
 Future<Standalone<RangeResultRef>> getRange(
 	Database const& cx,
 	Future<Version> const& fVersion,

@@ -804,44 +804,6 @@ struct LogMessageVersion {
 	bool empty() const { return (version == 0) && (sub == 0); }
 };
 
-struct AddressExclusion {
-	IPAddress ip;
-	int port;
-
-	AddressExclusion() : ip(0), port(0) {}
-	explicit AddressExclusion(const IPAddress& ip) : ip(ip), port(0) {}
-	explicit AddressExclusion(const IPAddress& ip, int port) : ip(ip), port(port) {}
-
-	bool operator<(AddressExclusion const& r) const {
-		if (ip != r.ip) return ip < r.ip;
-		return port < r.port;
-	}
-	bool operator==(AddressExclusion const& r) const { return ip == r.ip && port == r.port; }
-
-	bool isWholeMachine() const { return port == 0; }
-	bool isValid() const { return ip.isValid() || port != 0; }
-
-	bool excludes( NetworkAddress const& addr ) const {
-		if(isWholeMachine())
-			return ip == addr.ip;
-		return ip == addr.ip && port == addr.port;
-	}
-
-	// This is for debugging and IS NOT to be used for serialization to persistant state
-	std::string toString() const {
-		if (!isWholeMachine())
-			return formatIpPort(ip, port);
-		return ip.toString();
-	}
-
-	static AddressExclusion parse( StringRef const& );
-
-	template <class Ar>
-	void serialize(Ar& ar) {
-		serializer(ar, ip, port);
-	}
-};
-
 struct ClusterControllerPriorityInfo {
 	enum DCFitness { FitnessPrimary, FitnessRemote, FitnessPreferred, FitnessUnknown, FitnessBad }; //cannot be larger than 7 because of leader election mask
 
