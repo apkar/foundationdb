@@ -40,7 +40,6 @@
 #include "fdbclient/ReadYourWrites.h"
 #include "fdbrpc/Replication.h"
 #include "fdbrpc/ReplicationUtils.h"
-#include "fdbrpc/Locality.h"
 #include "fdbclient/KeyBackedTypes.h"
 #include "flow/Util.h"
 #include "flow/actorcompiler.h"  // This must be the last #include.
