@@ -34,6 +34,7 @@
 #include "flow/DeterministicRandom.h"
 #include "fdbrpc/TLSConnection.h"
 #include "fdbrpc/Platform.h"
+#include "fdbrpc/Locality.h"
 
 #include "flow/SimpleOpt.h"
 

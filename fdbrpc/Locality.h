@@ -328,4 +328,7 @@ struct LBDistance {
 
 LBDistance::Type loadBalanceDistance( LocalityData const& localLoc, LocalityData const& otherLoc, NetworkAddress const& otherAddr );
 
+static bool addressExcluded( std::__1::set<AddressExclusion> const& exclusions, NetworkAddress const& addr ) {
+	return exclusions.count( AddressExclusion(addr.ip, addr.port) ) || exclusions.count( AddressExclusion(addr.ip) );
+}
 #endif

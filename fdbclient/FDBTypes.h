@@ -842,10 +842,6 @@ struct AddressExclusion {
 	}
 };
 
-static bool addressExcluded( std::set<AddressExclusion> const& exclusions, NetworkAddress const& addr ) {
-	return exclusions.count( AddressExclusion(addr.ip, addr.port) ) || exclusions.count( AddressExclusion(addr.ip) );
-}
-
 struct ClusterControllerPriorityInfo {
 	enum DCFitness { FitnessPrimary, FitnessRemote, FitnessPreferred, FitnessUnknown, FitnessBad }; //cannot be larger than 7 because of leader election mask
 

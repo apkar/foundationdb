@@ -31,6 +31,7 @@
 #include "flow/UnitTest.h"
 #include "fdbrpc/ReplicationPolicy.h"
 #include "fdbrpc/Replication.h"
+#include "fdbrpc/Locality.h"
 #include "flow/actorcompiler.h"  // This must be the last #include.
 
 ACTOR static Future<vector<AddressExclusion>> getExcludedServers(Transaction* tr);
