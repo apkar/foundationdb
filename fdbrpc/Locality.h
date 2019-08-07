@@ -328,41 +328,61 @@ struct LBDistance {
 
 LBDistance::Type loadBalanceDistance( LocalityData const& localLoc, LocalityData const& otherLoc, NetworkAddress const& otherAddr );
 
+static NetworkAddress decodeNetworkAddress(StringRef const& key) {
+	NetworkAddress addr;
+	BinaryReader rd(key, Unversioned());
+	rd >> addr;
+	return addr;
+}
+
+static Standalone<StringRef> encodeNetworkAddress(NetworkAddress addr) {
+	BinaryWriter wr(Unversioned());
+	wr << addr;
+	return wr.toValue();
+}
+
 struct AddressExclusion {
 	IPAddress ip;
 	int port;
+	Standalone<StringRef> key;
+	Standalone<StringRef> value;
 
-	AddressExclusion() : ip(0), port(0) {}
-	explicit AddressExclusion(const IPAddress& ip) : ip(ip), port(0) {}
-	explicit AddressExclusion(const IPAddress& ip, int port) : ip(ip), port(port) {}
+	AddressExclusion() : ip(0), port(0), key(), value(encodeNetworkAddress(NetworkAddress(0, 0))) {}
+	explicit AddressExclusion(const IPAddress& ip, int port) : ip(ip), port(port), key(), value(encodeNetworkAddress(NetworkAddress(ip, port))) {}
+	explicit AddressExclusion(const IPAddress& ip) : AddressExclusion(ip, 0) {}
+
+	static AddressExclusion fromIPAddress(std::string addrStr);
 
 	bool operator<(AddressExclusion const& r) const {
-		if (ip != r.ip) return ip < r.ip;
-		return port < r.port;
+		if (key != r.key) return key < r.key;
+		return value < r.value;
 	}
-	bool operator==(AddressExclusion const& r) const { return ip == r.ip && port == r.port; }
+	bool operator==(AddressExclusion const& r) const { return key == r.key && value == r.value; }
 
-	bool isWholeMachine() const { return port == 0; }
-	bool isValid() const { return ip.isValid() || port != 0; }
+	bool isWholeMachine() const { return key.size() == 0 && decodeNetworkAddress(value).port == 0; }
+	bool isValid() const { return value.size(); }
 
 	bool excludes( NetworkAddress const& addr ) const {
-		if(isWholeMachine())
-			return ip == addr.ip;
-		return ip == addr.ip && port == addr.port;
+		if (key.size())
+			return false;
+
+		auto localAddr = decodeNetworkAddress(value);
+		return localAddr.ip == addr.ip && (localAddr.port == 0 || localAddr.port == addr.port);
 	}
 
-	// This is for debugging and IS NOT to be used for serialization to persistant state
+	// This is for debugging and IS NOT to be used for serialization to persistent state
 	std::string toString() const {
-		if (!isWholeMachine())
-			return formatIpPort(ip, port);
-		return ip.toString();
+		if (key.size()) {
+			return key.printable() + ":" + value.printable();
+		} else {
+			auto addr = decodeNetworkAddress(value);
+			return port == 0 ? addr.ip.toString() : formatIpPort(addr.ip, addr.port);
+		}
 	}
-
-	static AddressExclusion parse( StringRef const& );
 
 	template <class Ar>
 	void serialize(Ar& ar) {
-		serializer(ar, ip, port);
+		serializer(ar, key, value);
 	}
 };
 

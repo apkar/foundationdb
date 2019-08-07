@@ -1261,7 +1261,7 @@ ACTOR Future<Void> includeServers( Database cx, vector<AddressExclusion> servers
 					// address, the second will delete all ports.
 					auto addr = encodeExcludedServersKey(s);
 					tr.clear(singleKeyRange(addr));
-					tr.clear(KeyRangeRef(addr + ':', addr + char(':' + 1)));
+					tr.clear(prefixRange(addr.withSuffix(LiteralStringRef(":"))));
 				} else {
 					tr.clear( encodeExcludedServersKey(s) );
 				}

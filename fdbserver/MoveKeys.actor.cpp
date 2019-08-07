@@ -747,10 +747,8 @@ ACTOR Future<std::pair<Version, Tag>> addStorageServer( Database cx, StorageServ
 		try {
 			state Future<Standalone<RangeResultRef>> fTagLocalities = tr.getRange( tagLocalityListKeys, CLIENT_KNOBS->TOO_MANY );
 			state Future<Optional<Value>> fv = tr.get( serverListKeyFor(server.id()) );
-			state Future<Optional<Value>> fExclProc = tr.get(
-				StringRef(encodeExcludedServersKey( AddressExclusion( server.address().ip, server.address().port ))) );
-			state Future<Optional<Value>> fExclIP = tr.get(
-				StringRef(encodeExcludedServersKey( AddressExclusion( server.address().ip ))) );
+			state Future<Optional<Value>> fExclProc = tr.get(encodeExcludedServersKey( AddressExclusion( server.address().ip, server.address().port )));
+			state Future<Optional<Value>> fExclIP = tr.get(encodeExcludedServersKey( AddressExclusion( server.address().ip )));
 			state Future<Standalone<RangeResultRef>> fTags = tr.getRange( serverTagKeys, CLIENT_KNOBS->TOO_MANY, true);
 			state Future<Standalone<RangeResultRef>> fHistoryTags = tr.getRange( serverTagHistoryKeys, CLIENT_KNOBS->TOO_MANY, true);
 

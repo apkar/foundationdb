@@ -209,16 +209,17 @@ LBDistance::Type loadBalanceDistance( LocalityData const& loc1, LocalityData con
 	}
 	return LBDistance::DISTANT;
 }
-AddressExclusion AddressExclusion::parse( StringRef const& key ) {
+
+AddressExclusion AddressExclusion::fromIPAddress( std::string key ) {
 	//Must not change: serialized to the database!
-	auto parsedIp = IPAddress::parse(key.toString());
+	auto parsedIp = IPAddress::parse(key);
 	if (parsedIp.present()) {
 		return AddressExclusion(parsedIp.get());
 	}
 
 	// Not a whole machine, includes `port'.
 	try {
-		auto addr = NetworkAddress::parse(key.toString());
+		auto addr = NetworkAddress::parse(key);
 		if (addr.isTLS()) {
 			TraceEvent(SevWarnAlways, "AddressExclusionParseError")
 				.detail("String", key)

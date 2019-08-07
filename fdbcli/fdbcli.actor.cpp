@@ -1999,7 +1999,7 @@ ACTOR Future<bool> include( Database db, std::vector<StringRef> tokens ) {
 		addresses.push_back( AddressExclusion() );
 	else {
 		for(auto t = tokens.begin()+1; t != tokens.end(); ++t) {
-			auto a = AddressExclusion::parse( *t );
+			auto a = AddressExclusion::fromIPAddress(t->toString());
 			if (!a.isValid()) {
 				printf("ERROR: '%s' is not a valid network endpoint address\n", t->toString().c_str());
 				if( t->toString().find(":tls") != std::string::npos )
@@ -2043,7 +2043,7 @@ ACTOR Future<bool> exclude( Database db, std::vector<StringRef> tokens, Referenc
 			} else if (*t == LiteralStringRef("no_wait")) {
 				waitForAllExcluded = false;
 			} else {
-				auto a = AddressExclusion::parse( *t );
+				auto a = AddressExclusion::fromIPAddress( t->toString() );
 				if (!a.isValid()) {
 					printf("ERROR: '%s' is not a valid network endpoint address\n", t->toString().c_str());
 					if( t->toString().find(":tls") != std::string::npos )
@@ -2246,7 +2246,7 @@ ACTOR Future<bool> setClass( Database db, std::vector<StringRef> tokens ) {
 		return false;
 	}
 
-	AddressExclusion addr = AddressExclusion::parse( tokens[1] );
+	AddressExclusion addr = AddressExclusion::fromIPAddress( tokens[1].toString() );
 	if (!addr.isValid()) {
 		printf("ERROR: '%s' is not a valid network endpoint address\n", tokens[1].toString().c_str());
 		if( tokens[1].toString().find(":tls") != std::string::npos )
