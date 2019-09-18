@@ -2100,7 +2100,14 @@ ACTOR Future<bool> exclude( Database db, std::vector<StringRef> tokens, Referenc
 						return true;
 					}
 					NetworkAddress addr = NetworkAddress::parse(addrStr);
-					bool excluded = (process.has("excluded") && process.last().get_bool()) || addressExcluded(exclusions, addr);
+
+					LocalityData locality;
+					StatusObjectReader localityObj(process["locality"].get_obj());
+					for (auto localityElem : localityObj.obj()) {
+						locality.set(StringRef(localityElem.first), StringRef(localityElem.second.get_str()));
+					}
+
+					bool excluded = (process.has("excluded") && process.last().get_bool()) || addressExcluded(exclusions, locality, addr);
 					ssTotalCount++;
 					if (excluded)
 						ssExcludedCount++;

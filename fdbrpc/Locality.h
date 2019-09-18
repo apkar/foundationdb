@@ -389,4 +389,14 @@ struct AddressExclusion {
 static bool addressExcluded( std::__1::set<AddressExclusion> const& exclusions, NetworkAddress const& addr ) {
 	return exclusions.count( AddressExclusion(addr.ip, addr.port) ) || exclusions.count( AddressExclusion(addr.ip) );
 }
+
+static bool addressExcluded(std::set<AddressExclusion> const& exclusions, LocalityData const& locality, NetworkAddress const& addr) {
+	AddressExclusion networkAddr(addr.ip, addr.port);
+	for (auto exclusion : exclusions) {
+		if (exclusion == networkAddr || locality.get(exclusion.key) == exclusion.value) {
+			return true;
+		}
+	}
+	return false;
+}
 #endif
