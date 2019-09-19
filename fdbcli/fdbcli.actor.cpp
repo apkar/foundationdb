@@ -2162,8 +2162,15 @@ ACTOR Future<bool> exclude( Database db, std::vector<StringRef> tokens, Referenc
 		    wait(makeInterruptable(checkForExcludingServers(db, addresses, waitForAllExcluded)));
 		std::vector<ProcessData> workers = wait( makeInterruptable(getWorkers(db)) );
 		std::map<IPAddress, std::set<uint16_t>> workerPorts;
-		for(auto addr : workers)
+		std::map<StringRef, std::set<StringRef>> localityMap;
+		for(auto addr : workers) {
 			workerPorts[addr.address.ip].insert(addr.address.port);
+			for (auto localityKV : addr.locality._data) {
+				if (localityKV.second.present()) {
+					localityMap[localityKV.first].insert(localityKV.second.get());
+				}
+			}
+		}
 
 		// Print a list of all excluded addresses that don't have a corresponding worker
 		std::vector<AddressExclusion> absentExclusions;
